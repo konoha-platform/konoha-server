@@ -6,7 +6,7 @@ services:
     ports:
       - 27017:27017
     networks:
-      - aloha-platform
+      - konoha-platform
     volumes:
       - mongo-data:/data/db
   mongo-express:
@@ -15,7 +15,7 @@ services:
     ports:
       - 8081:8081
     networks:
-      - aloha-platform
+      - konoha-platform
   redis:
     container_name: redis
     image: redis:alpine
@@ -25,7 +25,7 @@ services:
       - 6379:6379
     restart: unless-stopped
     networks:
-      - aloha-platform
+      - konoha-platform
   redis_commander:
     container_name: redis_commander
     image: rediscommander/redis-commander:latest
@@ -36,9 +36,9 @@ services:
     depends_on:
       - redis
     networks:
-      - aloha-platform
+      - konoha-platform
 networks:
-  aloha-platform:
+  konoha-platform:
     driver: bridge
 
 volumes:

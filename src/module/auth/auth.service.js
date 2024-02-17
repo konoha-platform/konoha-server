@@ -70,7 +70,7 @@ const authService = {
     const isMatched = await bcrypt.compare(password, user.password);
     if (!isMatched) {
       const err = new Error(AUTH.PASSWORD_INCORRECT);
-      err.status = StatusCodes.UNAUTHORIZED;
+      err.status = StatusCodes.BAD_REQUEST;
       throw err;
     }
     const accessToken = createAccessToken({ id: user._id });
