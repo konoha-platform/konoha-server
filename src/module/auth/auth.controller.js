@@ -52,7 +52,7 @@ const authController = {
 
   logout: async (req, res) => {
     try {
-      res.clearCookie('refreshtoken', { path: '/api/refresh-token' });
+      res.clearCookie('refreshtoken', { path: '/api/auto-login' });
       return res.json({
         msg: AUTH.LOGOUT_SUCCESS
       });
@@ -61,11 +61,11 @@ const authController = {
     }
   },
 
-  generateAccessToken: async (req, res, next) => {
+  autoLogin: async (req, res, next) => {
     try {
       const refreshToken = req.body.refreshToken;
       const { user, accessToken: access_token } =
-        await authService.generateAccessToken({ refreshToken });
+        await authService.autoLogin({ refreshToken });
       return res.json({
         msg: AUTH.TOKEN_REFRESHED,
         user,

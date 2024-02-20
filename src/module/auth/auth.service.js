@@ -57,9 +57,7 @@ const authService = {
   },
 
   login: async ({ email, password }) => {
-    const user = await Users.findOne({ email }).populate(
-      'followers following',
-    );
+    const user = await Users.findOne({ email }).populate('followers following', '-password');
 
     if (!user) {
       const err = new Error(AUTH.EMAIL_NOT_EXISTED);
@@ -84,12 +82,11 @@ const authService = {
       user: {
         ...user._doc,
         avatar,
-        password: null,
       },
     };
   },
 
-  generateAccessToken: async ({ refreshToken }) => {
+  autoLogin: async ({ refreshToken }) => {
     if (!refreshToken) {
       const err = new Error(AUTH.SESSION_EXPIRED);
       err.status = StatusCodes.BAD_REQUEST;
