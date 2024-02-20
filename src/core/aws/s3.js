@@ -7,6 +7,7 @@ const bucket = process.env.AWS_BUCKET_NAME;
 const region = process.env.AWS_BUCKET_REGION;
 const accessKeyId = process.env.AWS_BUCKET_ACCESS_KEY_ID;
 const secretAccessKey = process.env.AWS_BUCKET_SECRET_ACCESS_KEY;
+const presignedLinkLifeTime = process.env.PRESIGNED_LINK_LIFETIME;
 
 const s3 = new S3Client({
   region,
@@ -36,7 +37,7 @@ const getPresignedUrl = async (key) => {
     Key: key,
     Bucket: bucket,
   });
-  return getSignedUrl(s3, command, { expiresIn: 3600 });
+  return getSignedUrl(s3, command, { expiresIn: presignedLinkLifeTime });
 };
 
 module.exports = {

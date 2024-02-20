@@ -1,5 +1,5 @@
 const DEFAULT_PAGE = 1;
-const DEFAULT_ITEMS_PER_PAGE = 2;
+const DEFAULT_ITEMS_PER_PAGE = 10;
 
 class APIFeatures {
   constructor(query, queryString) {
