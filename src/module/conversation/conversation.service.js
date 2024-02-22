@@ -1,7 +1,7 @@
-const { getPresignedUrl } = require('../../core/aws/s3');
 const Conversations = require('./conversation.model');
 const Messages = require('../message/message.model');
 const { APIFeatures } = require('../../shared/APIFeatures');
+const { ConversationMapper } = require('./conversation.mapper');
 
 const conversationService = {
   list: async ({ userId, query }) => {
@@ -16,18 +16,8 @@ const conversationService = {
       .sort('-updatedAt')
       .populate('recipients', 'avatar username fullname');
 
-    const formattedConversations = await Promise.all(
-      conversations.map(async (conversation) => {
-        conversation.recipients = await Promise.all(
-          conversation.recipients.map(async (recipent) => {
-            recipent.avatar = await getPresignedUrl(recipent.avatar);
-            return recipent;
-          })
-        );
-        return conversation;
-      })
-    );
-    return { conversations: formattedConversations };
+    const conversationDtos = await ConversationMapper.toListDto(conversations);
+    return { conversations: conversationDtos };
   },
 
   delete: async ({ id, userId }) => {

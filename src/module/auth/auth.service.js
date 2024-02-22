@@ -2,9 +2,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
 
-const Users = require('../user/user.model');
-const { getPresignedUrl } = require('../../core/aws/s3');
 const { AUTH, USER } = require('../../shared/message');
+const Users = require('../user/user.model');
+const { UserMapper } = require('../user/user.mapper');
 
 const authService = {
   register: async ({ fullname, username, email, password, gender }) => {
@@ -43,16 +43,12 @@ const authService = {
     const refreshToken = createRefreshToken({ id: newUser._id });
     await newUser.save();
 
-    const avatar = await getPresignedUrl(newUser.avatar);
+    const userDto = await UserMapper.toDto(newUser);
 
     return {
       accessToken,
       refreshToken,
-      user: {
-        ...newUser._doc,
-        avatar,
-        password: null,
-      },
+      user: userDto,
     };
   },
 
@@ -74,15 +70,11 @@ const authService = {
     const accessToken = createAccessToken({ id: user._id });
     const refreshToken = createRefreshToken({ id: user._id });
 
-    const avatar = await getPresignedUrl(user.avatar);
-
+    const userDto = await UserMapper.toDto(user);
     return {
       accessToken,
       refreshToken,
-      user: {
-        ...user._doc,
-        avatar,
-      },
+      user: userDto
     };
   },
 
@@ -105,10 +97,7 @@ const authService = {
           }
 
           const user = await Users.findById(result.id)
-            .select('-password')
-            .populate(
-              'followers following',
-            );
+            .populate('followers following', '-password');
 
           if (!user) {
             const err = new Error(USER.USER_NOT_FOUND);
@@ -117,10 +106,11 @@ const authService = {
           }
 
           const accessToken = createAccessToken({ id: result.id });
-          user.avatar = await getPresignedUrl(user.avatar);
+
+          const userDto = await UserMapper.toDto(user);
           resolve({
-            user,
             accessToken,
+            user: userDto,
           });
         }
       );

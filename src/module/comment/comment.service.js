@@ -1,8 +1,8 @@
 const { StatusCodes } = require('http-status-codes');
 
 const Comments = require('./comment.model');
-const Posts = require('../post/post.model');
 const { addToNotificationQueue } = require('../notification/notification.queue');
+const Posts = require('../post/post.model');
 const { POST, COMMENT } = require('../../shared/message');
 
 const commentService = {
