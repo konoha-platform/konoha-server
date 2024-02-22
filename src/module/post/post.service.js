@@ -3,8 +3,8 @@ const { StatusCodes } = require('http-status-codes');
 const Posts = require('./post.model');
 const Comments = require('../comment/comment.model');
 const Users = require('../user/user.model');
+const { PostMapper } = require('./post.mapper');
 const { addToNotificationQueue } = require('../notification/notification.queue');
-const { getPresignedUrl } = require('../../core/aws/s3');
 const { APIFeatures } = require('../../shared/APIFeatures');
 const { USER, POST } = require('../../shared/message');
 
@@ -17,12 +17,7 @@ const postService = {
     });
     await newPost.save();
 
-    const formattedImages = await Promise.all(
-      newPost.images.map(async (image) => ({
-        key: image,
-        url: await getPresignedUrl(image),
-      }))
-    );
+    const postDto = await PostMapper.toDto(newPost);
 
     addToNotificationQueue({
       content,
@@ -32,13 +27,7 @@ const postService = {
       recipients: [...user.followers],
     });
 
-    return {
-      newPost: {
-        ...newPost._doc,
-        user,
-        images: formattedImages,
-      },
-    };
+    return { newPost: postDto }
   },
 
   list: async ({ user, query }) => {
@@ -58,34 +47,9 @@ const postService = {
           select: '-password',
         },
       });
-    const formattedPosts = await Promise.all(
-      posts.map(async (post) => {
-        post.images = await Promise.all(
-          post.images.map(async (image) => ({
-            key: image,
-            url: await getPresignedUrl(image),
-          }))
-        );
-        const avatar = await getPresignedUrl(post.user.avatar);
-        post.comments = await Promise.all(
-          post.comments.map(async (comment) => {
-            const commentAvatar = await getPresignedUrl(comment.user.avatar);
-            comment.user = {
-              ...comment.user._doc,
-              avatar: commentAvatar,
-            };
-            return comment;
-          })
-        );
-        post.user = {
-          ...post.user._doc,
-          avatar,
-        };
-        return post;
-      })
-    );
+    const postDtos = await PostMapper.toListDto(posts);
     const count = await Posts.countDocuments(condition)
-    return { count, posts: formattedPosts };
+    return { count, posts: postDtos };
   },
 
   update: async ({ content, images, postId }) => {
@@ -94,6 +58,9 @@ const postService = {
       {
         content,
         images,
+      },
+      {
+        new: true
       }
     )
       .populate('user likes')
@@ -105,19 +72,8 @@ const postService = {
         },
       });
 
-    const formattedImages = await Promise.all(
-      images.map(async (image) => ({
-        key: image,
-        url: await getPresignedUrl(image),
-      }))
-    );
-    const post = {
-      ...updatedPost._doc,
-      content,
-      images: formattedImages,
-    };
-    post.user.avatar = await getPresignedUrl(updatedPost.user.avatar);
-    return { post };
+    const postDto = await PostMapper.toDto(updatedPost);
+    return { post: postDto };
   },
 
   get: async ({ id }) => {
@@ -136,21 +92,8 @@ const postService = {
       err.status = StatusCodes.NOT_FOUND;
       throw err;
     }
-    const formattedImages = await Promise.all(
-      post.images.map(async (image) => ({
-        key: image,
-        url: await getPresignedUrl(image),
-      }))
-    );
-    post.images = formattedImages;
-    post.user.avatar = await getPresignedUrl(post.user.avatar);
-    post.comments = await Promise.all(
-      post.comments.map(async (comment) => {
-        comment.user.avatar = await getPresignedUrl(comment.user.avatar);
-        return comment;
-      })
-    );
-    return { post };
+    const formattedPosts = await PostMapper.toDto(post);
+    return { post: formattedPosts };
   },
 
   delete: async ({ id, user }) => {

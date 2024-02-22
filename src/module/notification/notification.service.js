@@ -1,6 +1,7 @@
 const Notifications = require('./notification.model');
-const { getPresignedUrl } = require('../../core/aws/s3');
 const { getIo, getSocketUserById, getRoomName } = require('../../core/socket/socket');
+const { NotificationMapper } = require('./notification.mapper');
+const { UserMapper } = require('../user/user.mapper');
 
 const notificationService = {
   create: async ({ recipients, url, text, content, user }) => {
@@ -17,13 +18,8 @@ const notificationService = {
     });
     await createdNotification.save();
 
-    const formattedRecipients = await Promise.all(
-      recipients.map(async (recipient) => {
-        recipient.avatar = await getPresignedUrl(recipient.avatar);
-        return recipient;
-      })
-    );
-    for (const recipient of formattedRecipients) {
+    const recipientDtos = await UserMapper.toListDto(recipients);
+    for (const recipient of recipientDtos) {
       const user = await getSocketUserById(recipient);
       if (!user) continue;
       const io = getIo();
@@ -52,13 +48,8 @@ const notificationService = {
       .sort('-createdAt')
       .populate('user', 'avatar username');
 
-    const formattedNotifications = await Promise.all(
-      notifications.map(async (notification) => {
-        notification.user.avatar = await getPresignedUrl(notification.user.avatar);
-        return notification;
-      })
-    );
-    return { notifications: formattedNotifications };
+    const notificationDtos = await NotificationMapper.toListDto(notifications)
+    return { notifications: notificationDtos };
   },
 
   markAsRead: async ({ id }) => {

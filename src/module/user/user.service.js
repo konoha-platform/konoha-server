@@ -2,9 +2,10 @@ const { StatusCodes } = require('http-status-codes');
 
 const Users = require('./user.model');
 const Posts = require('../post/post.model');
-const { getPresignedUrl } = require('../../core/aws/s3');
 const { APIFeatures } = require('../../shared/APIFeatures');
 const { addToNotificationQueue } = require('../notification/notification.queue');
+const { UserMapper } = require('./user.mapper');
+const { PostMapper } = require('../post/post.mapper');
 
 const userService = {
   search: async ({ username }) => {
@@ -16,13 +17,8 @@ const userService = {
       .limit(10)
       .select('fullname username avatar');
 
-    const formattedUsers = await Promise.all(
-      users.map(async (user) => ({
-        ...user._doc,
-        avatar: await getPresignedUrl(user.avatar),
-      }))
-    );
-    return { users: formattedUsers };
+    const userDtos = await UserMapper.toListDto(users)
+    return { users: userDtos };
   },
 
   suggest: async ({ user, query }) => {
@@ -48,13 +44,9 @@ const userService = {
         },
       },
     ]).project('-password');
-    const formattedUsers = await Promise.all(
-      users.map(async (formattedUser) => ({
-        ...formattedUser,
-        avatar: await getPresignedUrl(formattedUser.avatar),
-      }))
-    );
-    return { users: formattedUsers };
+    
+    const userDtos = await UserMapper.toListDto(users)
+    return { users: userDtos };
   },
 
   getSavedPosts: async ({ user, query }) => {
@@ -75,35 +67,10 @@ const userService = {
           path: 'user likes',
           select: '-password',
         },
-      });;
-    const formattedPosts = await Promise.all(
-      posts.map(async (post) => {
-        post.images = await Promise.all(
-          post.images.map(async (image) => ({
-            key: image,
-            url: await getPresignedUrl(image),
-          }))
-          );
-        const avatar = await getPresignedUrl(post.user.avatar);
-        post.comments = await Promise.all(
-          post.comments.map(async (comment) => {
-            const commentAvatar = await getPresignedUrl(comment.user.avatar);
-            comment.user = {
-              ...comment.user._doc,
-              avatar: commentAvatar,
-            };
-            return comment;
-          })
-        );
-        post.user = {
-          ...post.user._doc,
-          avatar,
-        };
-        return post;
-      })
-    );
-    const count = await Posts.countDocuments(condition)
-    return { count, savedPosts: formattedPosts };
+      });
+    const postDtos = await PostMapper.toListDto(posts)
+    const count = await Posts.countDocuments(condition);
+    return { count, savedPosts: postDtos };
   },
 
   getDiscoverPosts: async ({ user, query }) => {
@@ -126,8 +93,9 @@ const userService = {
       err.status = StatusCodes.NOT_FOUND;
       throw err;
     }
-    user.avatar = await getPresignedUrl(user.avatar);
-    return { user };
+  
+    const userDto = await UserMapper.toDto(user);
+    return { user: userDto };
   },
 
   update: async ({
@@ -184,20 +152,7 @@ const userService = {
       { new: true }
     );
 
-    updatedUser.avatar = await getPresignedUrl(updatedUser.avatar);
-    updatedUser.followers = await Promise.all(
-      updatedUser.followers.map(async (follower) => {
-        follower.avatar = await getPresignedUrl(follower.avatar);
-        return follower;
-      })
-    );
-    updatedUser.following = await Promise.all(
-      updatedUser.following.map(async (followingUser) => {
-        followingUser.avatar = await getPresignedUrl(followingUser.avatar);
-        return followingUser;
-      })
-    );
-
+    const userDto = await UserMapper.toDto(updatedUser);
     addToNotificationQueue({
       user: { _id: userId },
       text: 'has started to follow you.',
@@ -205,7 +160,7 @@ const userService = {
       recipients: [updatedUser._id],
     });
 
-    return { user: updatedUser };
+    return { user: userDto };
   },
 
   unfollow: async ({ id, userId }) => {
@@ -225,20 +180,8 @@ const userService = {
       { new: true }
     );
 
-    updatedUser.avatar = await getPresignedUrl(updatedUser.avatar);
-    updatedUser.followers = await Promise.all(
-      updatedUser.followers.map(async (follower) => {
-        follower.avatar = await getPresignedUrl(follower.avatar);
-        return follower;
-      })
-    );
-    updatedUser.following = await Promise.all(
-      updatedUser.following.map(async (followingUser) => {
-        followingUser.avatar = await getPresignedUrl(followingUser.avatar);
-        return followingUser;
-      })
-    );
-    return { user: updatedUser };
+    const userDto = await UserMapper.toDto(updatedUser);
+    return { user: userDto };
   },
 
   getUserPosts: async ({ user, query }) => {
@@ -253,34 +196,10 @@ const userService = {
           select: '-password',
         },
       });
-    const formattedPosts = await Promise.all(
-      posts.map(async (post) => {
-        post.images = await Promise.all(
-          post.images.map(async (image) => ({
-            key: image,
-            url: await getPresignedUrl(image),
-          }))
-          );
-        const avatar = await getPresignedUrl(post.user.avatar);
-        post.comments = await Promise.all(
-          post.comments.map(async (comment) => {
-            const commentAvatar = await getPresignedUrl(comment.user.avatar);
-            comment.user = {
-              ...comment.user._doc,
-              avatar: commentAvatar,
-            };
-            return comment;
-          })
-        );
-        post.user = {
-          ...post.user._doc,
-          avatar,
-        };
-        return post;
-      })
-    );
+    
+    const postDtos = await PostMapper.toListDto(posts)
     const count = await Posts.countDocuments({ user })
-    return { count, posts: formattedPosts };
+    return { count, posts: postDtos };
   },
 };
 
