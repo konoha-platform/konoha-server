@@ -20,7 +20,7 @@ class UserMapper {
     if (dto.followers?.[0] instanceof mongoose.Types.ObjectId) {
       dto.followers = user?.followers;
     } else {
-      dto.following = await UserMapper.toListDto(user?.following);
+      dto.followers = await UserMapper.toListDto(user?.followers);
     }
     if (dto.following?.[0] instanceof mongoose.Types.ObjectId) {
       dto.following = user?.following;

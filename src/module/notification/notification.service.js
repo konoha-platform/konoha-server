@@ -1,5 +1,4 @@
 const Notifications = require('./notification.model');
-const { getPresignedUrl } = require('../../core/aws/s3');
 const { getIo, getSocketUserById, getRoomName } = require('../../core/socket/socket');
 const { NotificationMapper } = require('./notification.mapper');
 const { UserMapper } = require('../user/user.mapper');

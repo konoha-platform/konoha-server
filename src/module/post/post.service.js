@@ -5,7 +5,6 @@ const Comments = require('../comment/comment.model');
 const Users = require('../user/user.model');
 const { PostMapper } = require('./post.mapper');
 const { addToNotificationQueue } = require('../notification/notification.queue');
-const { getPresignedUrl } = require('../../core/aws/s3');
 const { APIFeatures } = require('../../shared/APIFeatures');
 const { USER, POST } = require('../../shared/message');
 
@@ -18,12 +17,7 @@ const postService = {
     });
     await newPost.save();
 
-    const formattedImages = await Promise.all(
-      newPost.images.map(async (image) => ({
-        key: image,
-        url: await getPresignedUrl(image),
-      }))
-    );
+    const postDto = await PostMapper.toDto(newPost);
 
     addToNotificationQueue({
       content,
@@ -33,13 +27,7 @@ const postService = {
       recipients: [...user.followers],
     });
 
-    return {
-      newPost: {
-        ...newPost._doc,
-        user,
-        images: formattedImages,
-      },
-    };
+    return { newPost: postDto }
   },
 
   list: async ({ user, query }) => {
@@ -59,9 +47,9 @@ const postService = {
           select: '-password',
         },
       });
-    const formattedPosts = await PostMapper.toListDto(posts);
+    const postDtos = await PostMapper.toListDto(posts);
     const count = await Posts.countDocuments(condition)
-    return { count, posts: formattedPosts };
+    return { count, posts: postDtos };
   },
 
   update: async ({ content, images, postId }) => {
@@ -84,8 +72,8 @@ const postService = {
         },
       });
 
-    const formattedPosts = await PostMapper.toDto(updatedPost);
-    return { post: formattedPosts };
+    const postDto = await PostMapper.toDto(updatedPost);
+    return { post: postDto };
   },
 
   get: async ({ id }) => {
