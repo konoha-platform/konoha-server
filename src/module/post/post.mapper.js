@@ -13,6 +13,8 @@ class PostMapper {
     dto.user = await UserMapper.toDto(post?.user);
     dto.comments = await CommentMapper.toListDto(post?.comments);
     dto.likes = post.likes;
+    dto.createdAt = post?.createdAt;
+    dto.updatedAt = post?.updatedAt;
     return omitBy(dto, isNil);
   }
 

@@ -11,8 +11,9 @@ class UserMapper {
     dto.username = user?.username;
     dto.email = user?.email;
     dto.avatar = await getPresignedUrl(user?.avatar);
-    dto.createdAt = user?.email;
-    dto.role = user?.email;
+    dto.createdAt = user?.createdAt;
+    dto.updatedAt = user?.updatedAt;
+    dto.role = user?.role;
     dto.gender = user?.gender;
     dto.address = user?.address;
     dto.story = user?.story;
@@ -27,7 +28,6 @@ class UserMapper {
     } else {
       dto.following = await UserMapper.toListDto(user?.following);
     }
-    dto.following = await UserMapper.toListDto(user?.following);
     dto.saved = user?.saved;
     dto.settings = user?.settings;
     return omitBy(dto, isNil);

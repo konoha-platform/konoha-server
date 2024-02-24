@@ -12,6 +12,8 @@ class NotificationMapper {
     dto.url = notification?.url;
     dto.user = await UserMapper.toDto(notification?.user);
     dto.recipients = await NotificationMapper.toListDto(notification?.recipients);
+    dto.createdAt = notification?.createdAt;
+    dto.updatedAt = notification?.updatedAt;
     return omitBy(dto, isNil);
   }
 
