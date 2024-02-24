@@ -10,9 +10,10 @@ class MessageMapper {
     dto._id = message?._id;
     dto.text = message?.text;
     dto.call = message?.call;
-    dto.media = await getPresignedUrl(message?.media);
+    dto.media = message.media ? await Promise.all(message.media.map(async (m) => ({ key: m, url: await getPresignedUrl(m)}))) : [];
     dto.conversation = await ConversationMapper.toDto(message?.conversation);
     dto.sender = await UserMapper.toDto(message?.sender);
+    dto.sender = message?.sender;
     dto.recipient = await UserMapper.toDto(message?.recipient);
     dto.createdAt = message?.createdAt;
     dto.updatedAt = message?.updatedAt;
