@@ -14,6 +14,8 @@ class MessageMapper {
     dto.conversation = await ConversationMapper.toDto(message?.conversation);
     dto.sender = await UserMapper.toDto(message?.sender);
     dto.recipient = await UserMapper.toDto(message?.recipient);
+    dto.createdAt = message?.createdAt;
+    dto.updatedAt = message?.updatedAt;
     return omitBy(dto, isNil);
   }
 

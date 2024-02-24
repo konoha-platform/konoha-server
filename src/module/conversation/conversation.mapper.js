@@ -10,6 +10,8 @@ class ConversationMapper {
     dto.call = conversation?.call;
     dto.media = conversation?.media;
     dto.recipients = await UserMapper.toListDto(conversation?.recipients);
+    dto.createdAt = conversation?.createdAt;
+    dto.updatedAt = conversation?.updatedAt;
     return omitBy(dto, isNil);
   }
 

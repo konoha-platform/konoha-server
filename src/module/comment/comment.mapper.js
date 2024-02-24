@@ -13,6 +13,8 @@ class CommentMapper {
     dto.postId = comment?.postId;
     dto.postUserId = comment?.postUserId;
     dto.user = await UserMapper.toDto(comment?.user);
+    dto.createdAt = comment?.createdAt;
+    dto.updatedAt = comment?.updatedAt;
     return omitBy(dto, isNil);
   }
 
