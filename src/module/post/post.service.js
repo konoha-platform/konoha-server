@@ -16,7 +16,6 @@ const postService = {
       user: user._id,
     });
     await newPost.save();
-
     const postDto = await PostMapper.toDto(newPost);
 
     addToNotificationQueue({
@@ -26,7 +25,6 @@ const postService = {
       text: 'added a new post.',
       recipients: [...user.followers],
     });
-
     return { newPost: postDto }
   },
 
@@ -55,13 +53,8 @@ const postService = {
   update: async ({ content, images, postId }) => {
     const updatedPost = await Posts.findOneAndUpdate(
       { _id: postId },
-      {
-        content,
-        images,
-      },
-      {
-        new: true
-      }
+      { content, images },
+      { new: true }
     )
       .populate('user likes')
       .populate({
@@ -71,7 +64,6 @@ const postService = {
           select: '-password',
         },
       });
-
     const postDto = await PostMapper.toDto(updatedPost);
     return { post: postDto };
   },
@@ -92,8 +84,8 @@ const postService = {
       err.status = StatusCodes.NOT_FOUND;
       throw err;
     }
-    const formattedPosts = await PostMapper.toDto(post);
-    return { post: formattedPosts };
+    const postDto = await PostMapper.toDto(post);
+    return { post: postDto };
   },
 
   delete: async ({ id, user }) => {
@@ -117,9 +109,7 @@ const postService = {
     
     const updatedPost = await Posts.findOneAndUpdate(
       { _id: postId },
-      {
-        $push: { likes: user._id },
-      },
+      { $push: { likes: user._id } },
       { new: true }
     );
 
@@ -141,9 +131,7 @@ const postService = {
   unlike: async ({ postId, user }) => {
     const updatedPost = await Posts.findOneAndUpdate(
       { _id: postId },
-      {
-        $pull: { likes: user._id },
-      },
+      { $pull: { likes: user._id } },
       { new: true }
     );
 
@@ -152,6 +140,7 @@ const postService = {
       err.status = StatusCodes.NOT_FOUND;
       throw err;
     }
+    return updatedPost;
   },
 
   save: async ({ id, userId }) => {
@@ -164,9 +153,7 @@ const postService = {
 
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
-      {
-        $push: { saved: id },
-      },
+      { $push: { saved: id } },
       { new: true }
     );
 
@@ -180,9 +167,7 @@ const postService = {
   unsave: async ({ id, userId }) => {
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
-      {
-        $pull: { saved: id },
-      },
+      { $pull: { saved: id } },
       { new: true }
     );
 

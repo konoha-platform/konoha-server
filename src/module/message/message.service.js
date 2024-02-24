@@ -1,9 +1,11 @@
 const Conversations = require('../conversation/conversation.model');
 const Messages = require('./message.model');
 const { APIFeatures } = require('../../shared/APIFeatures');
+const { MessageMapper } = require('./message.mapper');
 
 const messageService = {
   create: async ({ sender, recipient, text, media, call }) => {
+    console.log({ sender, recipient, text, media, call })
     if (!recipient || (!text.trim() && media.length === 0 && !call)) return;
 
     const newConversation = await Conversations.findOneAndUpdate(
@@ -44,7 +46,8 @@ const messageService = {
       query
     ).paginate();
     const messages = await features.query.sort('-createdAt');
-    return { messages };
+    const messageDtos = await MessageMapper.toListDto(messages)
+    return { messages: messageDtos };
   },
 
   delete: async ({ id, userId }) => {
