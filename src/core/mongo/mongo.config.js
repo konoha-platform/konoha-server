@@ -6,8 +6,8 @@ const {
   MONGO_PASSWORD: password
 } = process.env;
 
-// const uri = `mongodb://${host}:${port}/${database}`;
-const uri = `mongodb+srv://${user}:${password}@cluster0.t21swir.mongodb.net/konoha`
+const uri = `mongodb://${host}:${port}/${database}`;
+// const uri = `mongodb+srv://${user}:${password}@cluster0.t21swir.mongodb.net/konoha`
 
 const mongoConfig = {
   host,

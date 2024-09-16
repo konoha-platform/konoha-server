@@ -4,7 +4,7 @@ services:
     image: mongo:3.6.19-xenial
     container_name: mongo
     ports:
-      - 27017:27017
+      - 3004:27017
     networks:
       - konoha-platform
     volumes:
@@ -13,7 +13,7 @@ services:
     image: mongo-express:0.54.0
     container_name: mongo-express
     ports:
-      - 8081:8081
+      - 3005:8081
     networks:
       - konoha-platform
   redis:
@@ -22,7 +22,7 @@ services:
     expose:
       - 6379
     ports:
-      - 6379:6379
+      - 3006:6379
     restart: unless-stopped
     networks:
       - konoha-platform
@@ -32,7 +32,7 @@ services:
     environment:
       - REDIS_HOSTS=local:redis:6379
     ports:
-      - '8082:8081'
+      - '3007:8081'
     depends_on:
       - redis
     networks:

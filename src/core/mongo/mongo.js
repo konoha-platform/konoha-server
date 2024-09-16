@@ -11,22 +11,25 @@ const mongoOptions = {
 };
 
 const connectMongoDB = async () => {
-  mongoose.connect(mongoUri, mongoOptions, (err) => {
-    if (err) {
-      logger.error(
+  await new Promise((resolve, reject) => {
+    mongoose.connect(mongoUri, mongoOptions, (err) => {
+      if (err) {
+        logger.error(
+          JSON.stringify({
+            msg: err.message,
+            status: err.status,
+          })
+        );
+        resolve(err);
+      }
+      logger.info(
         JSON.stringify({
-          msg: err.message,
-          status: err.status,
+          msg: `Mongo database connected!`,
         })
       );
-      throw err;
-    }
-    logger.info(
-      JSON.stringify({
-        msg: `Mongo database connected!`,
-      })
-    );
-  });
+      resolve();
+    });
+  })
 };
 
 module.exports = { connectMongoDB };
